@@ -1,0 +1,2 @@
+# STM32F769I-EVAL
+ Edu projects on STM32F769
