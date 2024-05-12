@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+*/.metadata/
+/GPIOProject
+/UART_HyperTerminal_DMA
+/UART_Printf
+/.metadata/
+*.launch
+*.ld
+LEDs_Project/.settings/org.eclipse.core.resources.prefs
+*.prefs
+*.s
