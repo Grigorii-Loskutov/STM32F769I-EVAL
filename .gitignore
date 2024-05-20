@@ -40,3 +40,4 @@
 LEDs_Project/.settings/org.eclipse.core.resources.prefs
 *.prefs
 *.s
+/FreeRTOS_Timers

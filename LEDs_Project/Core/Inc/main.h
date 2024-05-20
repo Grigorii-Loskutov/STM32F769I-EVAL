@@ -73,10 +73,6 @@ void Error_Handler(void);
 #define I2C1_SCL_GPIO_Port GPIOB
 #define ULPI_D7_Pin GPIO_PIN_5
 #define ULPI_D7_GPIO_Port GPIOB
-#define JOY_UP_Pin GPIO_PIN_4
-#define JOY_UP_GPIO_Port GPIOB
-#define JOY_RIGHT_Pin GPIO_PIN_3
-#define JOY_RIGHT_GPIO_Port GPIOB
 #define SD2_CMD_Pin GPIO_PIN_7
 #define SD2_CMD_GPIO_Port GPIOD
 #define SD1_CLK_Pin GPIO_PIN_12
@@ -165,8 +161,6 @@ void Error_Handler(void);
 #define D23_GPIO_Port GPIOH
 #define D25_Pin GPIO_PIN_1
 #define D25_GPIO_Port GPIOI
-#define RS232_IrDA_RX_Pin GPIO_PIN_10
-#define RS232_IrDA_RX_GPIO_Port GPIOA
 #define OSC32_IN_Pin GPIO_PIN_14
 #define OSC32_IN_GPIO_Port GPIOC
 #define A1_Pin GPIO_PIN_1
@@ -181,8 +175,6 @@ void Error_Handler(void);
 #define D22_GPIO_Port GPIOH
 #define D24_Pin GPIO_PIN_0
 #define D24_GPIO_Port GPIOI
-#define RS2320IrDA0T_Pin GPIO_PIN_9
-#define RS2320IrDA0T_GPIO_Port GPIOA
 #define OSC32_OUT_Pin GPIO_PIN_15
 #define OSC32_OUT_GPIO_Port GPIOC
 #define SD1_D1_Pin GPIO_PIN_9
@@ -259,8 +251,6 @@ void Error_Handler(void);
 #define SAI1_SDA_GPIO_Port GPIOC
 #define MII_TXD2_Pin GPIO_PIN_2
 #define MII_TXD2_GPIO_Port GPIOC
-#define JOY_LEFT_Pin GPIO_PIN_2
-#define JOY_LEFT_GPIO_Port GPIOB
 #define A6_Pin GPIO_PIN_12
 #define A6_GPIO_Port GPIOF
 #define A11_Pin GPIO_PIN_1
@@ -341,14 +331,6 @@ void Error_Handler(void);
 #define ULPI_D0_GPIO_Port GPIOA
 #define MII_RX_DV_Pin GPIO_PIN_7
 #define MII_RX_DV_GPIO_Port GPIOA
-#define JOY_DOWN_Pin GPIO_PIN_1
-#define JOY_DOWN_GPIO_Port GPIOB
-#define JOY_SEL_Pin GPIO_PIN_0
-#define JOY_SEL_GPIO_Port GPIOB
-#define LED1_Pin GPIO_PIN_0
-#define LED1_GPIO_Port GPIOJ
-#define LED2_Pin GPIO_PIN_1
-#define LED2_GPIO_Port GPIOJ
 #define D4_Pin GPIO_PIN_7
 #define D4_GPIO_Port GPIOE
 #define D7_Pin GPIO_PIN_10
