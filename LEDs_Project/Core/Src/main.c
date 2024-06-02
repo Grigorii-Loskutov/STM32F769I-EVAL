@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,8 +40,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc3;
-DMA_HandleTypeDef hdma_adc3;
+DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim6;
 
@@ -57,6 +58,14 @@ uint8_t TRST_pin = 1;
 uint8_t TRST_pin_last = 1;
 uint32_t TRST_pin_debounce = 1;
 uint32_t filter_delay = 0;
+bool is_defounce = 0;
+
+uint32_t rawADCdata;
+const uint32_t ADC_dt = 2000; // ms
+uint32_t ADC_start_conversion_time;
+bool isConfersion = false;
+float Volts;
+char msg[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,6 +75,7 @@ static void MX_DMA_Init(void);
 static void MX_ADC3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -85,6 +95,7 @@ uint32_t debounce(uint8_t *pin_name, uint8_t *pin_name_last, uint32_t *delay) {
 	}
 	*pin_name_last = *pin_name;
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -120,6 +131,7 @@ int main(void)
   MX_ADC3_Init();
   MX_USART1_UART_Init();
   MX_TIM6_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	if (HAL_UART_Transmit_DMA(&huart1, (uint8_t*) aTxStartMessage,
 			(uint16_t) (sizeof(aTxStartMessage) - 1)) != HAL_OK) {
@@ -136,6 +148,7 @@ int main(void)
 		HAL_UART_IRQHandler(&huart1);
 	}
 	HAL_TIM_Base_Start_IT(&htim6);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)rawADCdata, 1);
 //	if (HAL_TIM_Base_Start(&htim6) != HAL_OK) {
 //		Error_Handler();
 //	}
@@ -148,18 +161,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		/*		if (filter_delay == 0) {
-		 TRST_pin = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
-		 }
-		 if (TRST_pin != TRST_pin_last) {
-		 filter_delay = HAL_GetTick();
-		 }
-		 if (filter_delay != 0 && (HAL_GetTick() - filter_delay) > 300) {
-		 filter_delay = 0;
-		 TRST_pin_debounce = 0;
-		 }
-		 TRST_pin_last = TRST_pin;*/
-		TRST_pin_debounce = debounce(&TRST_pin, &TRST_pin_last, &filter_delay);
+
+		//TRST_pin_debounce = debounce(&TRST_pin, &TRST_pin_last, &filter_delay);
 		if (TRST_pin_debounce == 0) {
 			while (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY) {
 				HAL_UART_IRQHandler(&huart1);
@@ -170,6 +173,31 @@ int main(void)
 				Error_Handler();
 			}
 			TRST_pin_debounce = 1;
+		}
+		if (!isConfersion) {
+			//HAL_ADC_Start(&hadc1);
+			ADC_start_conversion_time = HAL_GetTick();
+			isConfersion = true;
+			//HAL_ADC_PollForConversion(&hadc3, ADC_dt - 100);
+			//HAL_ADC_Start_DMA(&hadc3, (uint16_t*)rawADCdata, 1);
+		}
+		uint32_t curent_time = HAL_GetTick();
+		uint32_t curent_time_with_delay = ADC_start_conversion_time + ADC_dt;
+		if (curent_time_with_delay < curent_time) {
+			HAL_ADC_Start_DMA(&hadc1, &rawADCdata, 1);
+			//rawADCdata = HAL_ADC_GetValue(&hadc1);
+			Volts = 3300 * ((float) rawADCdata) / 4095;
+			sprintf(msg, "Volts: %f\r\n", Volts);
+			while (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY) {
+				HAL_UART_IRQHandler(&huart1);
+			}
+			if (HAL_UART_Transmit_DMA(&huart1, (uint8_t*) msg,
+					strlen(msg)) != HAL_OK) {
+				Error_Handler();
+			}
+			//HAL_ADC_Stop_DMA(&hadc3);
+			ADC_start_conversion_time = 0;
+			isConfersion = false;
 		}
 	}
 
@@ -227,6 +255,58 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
   * @brief ADC3 Initialization Function
   * @param None
   * @retval None
@@ -249,7 +329,7 @@ static void MX_ADC3_Init(void)
   hadc3.Instance = ADC3;
   hadc3.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc3.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc3.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc3.Init.ContinuousConvMode = DISABLE;
   hadc3.Init.DiscontinuousConvMode = DISABLE;
   hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
@@ -453,8 +533,8 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : TRST_Pin */
   GPIO_InitStruct.Pin = TRST_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(TRST_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SD2_CMD_Pin SD2_CLK_Pin */
@@ -774,6 +854,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_OTG_HS_FS;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

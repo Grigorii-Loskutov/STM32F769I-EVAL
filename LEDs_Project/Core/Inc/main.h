@@ -75,6 +75,7 @@ void Error_Handler(void);
 #define ULPI_D7_GPIO_Port GPIOB
 #define TRST_Pin GPIO_PIN_4
 #define TRST_GPIO_Port GPIOB
+#define TRST_EXTI_IRQn EXTI4_IRQn
 #define SD2_CMD_Pin GPIO_PIN_7
 #define SD2_CMD_GPIO_Port GPIOD
 #define SD1_CLK_Pin GPIO_PIN_12
