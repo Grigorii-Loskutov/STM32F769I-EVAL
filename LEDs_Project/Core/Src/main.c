@@ -43,6 +43,7 @@
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc3;
 DMA_HandleTypeDef hdma_adc1;
+DMA_HandleTypeDef hdma_adc3;
 
 TIM_HandleTypeDef htim6;
 
@@ -166,7 +167,6 @@ int main(void)
 		if (TRST_pin_debounce == 0) {
 			while (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY) {
 				HAL_UART_IRQHandler(&huart1);
-				//HAL_GPIO_TogglePin(GPIOI, LED0_Pin);
 			}
 			if (HAL_UART_Transmit_DMA(&huart1, (uint8_t*) GPIO_Message,
 					(uint16_t) (sizeof(GPIO_Message) - 1)) != HAL_OK) {
@@ -175,19 +175,15 @@ int main(void)
 			TRST_pin_debounce = 1;
 		}
 		if (!isConfersion) {
-			//HAL_ADC_Start(&hadc1);
 			ADC_start_conversion_time = HAL_GetTick();
 			isConfersion = true;
-			//HAL_ADC_PollForConversion(&hadc3, ADC_dt - 100);
-			//HAL_ADC_Start_DMA(&hadc3, (uint16_t*)rawADCdata, 1);
 		}
 		uint32_t curent_time = HAL_GetTick();
 		uint32_t curent_time_with_delay = ADC_start_conversion_time + ADC_dt;
 		if (curent_time_with_delay < curent_time) {
 			HAL_ADC_Start_DMA(&hadc1, &rawADCdata, 1);
-			//rawADCdata = HAL_ADC_GetValue(&hadc1);
 			Volts = 3300 * ((float) rawADCdata) / 4095;
-			sprintf(msg, "Volts: %f\r\n", Volts);
+			sprintf(msg, "Volts: %f\r", Volts);
 			while (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY) {
 				HAL_UART_IRQHandler(&huart1);
 			}
@@ -329,14 +325,14 @@ static void MX_ADC3_Init(void)
   hadc3.Instance = ADC3;
   hadc3.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc3.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc3.Init.ContinuousConvMode = DISABLE;
+  hadc3.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc3.Init.ContinuousConvMode = ENABLE;
   hadc3.Init.DiscontinuousConvMode = DISABLE;
   hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc3.Init.NbrOfConversion = 1;
-  hadc3.Init.DMAContinuousRequests = DISABLE;
+  hadc3.Init.DMAContinuousRequests = ENABLE;
   hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc3) != HAL_OK)
   {
@@ -444,6 +440,9 @@ static void MX_DMA_Init(void)
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA2_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
   /* DMA2_Stream2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
